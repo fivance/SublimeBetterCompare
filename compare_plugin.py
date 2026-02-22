@@ -1,6 +1,6 @@
 """
 ComparePlugin for Sublime Text 3/4
-A port of Notepad++'s Compare plugin.
+A better version of existing compare plugins in my opinion.
 
 Compatible with Python 3.3 (Sublime Text 3) and Python 3.8 (Sublime Text 4).
 
@@ -9,11 +9,12 @@ two temporary scratch views to display the padded diff, then closes them
 on clear or when either is closed by the user.
 
 Installation:
-  Preferences > Browse Packages > create folder "ComparePlugin"
+  Preferences > Browse Packages > create folder "BetterCompare"
   Copy all plugin files into that folder.
-  Reload: Tools > Developer > Reload Packages
+  Restart Sublime Text to load plugin
 
 Usage:
+  Tools > Compare (pick 2 files to compare against each other)
   Tools > Compare Plugin > Compare (Last Two Views)   or  Alt+D
   Tools > Compare Plugin > Select Files to Compare    or  Alt+Shift+D
   Tools > Compare Plugin > Compare Against Saved      or  Alt+Shift+S
@@ -507,7 +508,7 @@ class CompareSelectFilesCommand(sublime_plugin.WindowCommand):
         self.window.show_quick_panel(
             self._names,
             self._on_first,
-            placeholder="Compare: select the FIRST file"
+            placeholder="Compare: select the 1st file"
         )
 
     def _on_first(self, idx):
@@ -537,7 +538,7 @@ class CompareSelectFilesCommand(sublime_plugin.WindowCommand):
         self.window.show_quick_panel(
             self._names,
             self._on_second,
-            placeholder="Compare: select the SECOND file (first: " + first_name.split("/")[-1].split("\\")[-1] + ")"
+            placeholder="Compare: select the 2nd file (first: " + first_name.split("/")[-1].split("\\")[-1] + ")"
         )
 
     def _on_second(self, idx):
@@ -958,10 +959,6 @@ def _remove_color_scheme():
         except Exception as e:
             print("ComparePlugin: could not remove " + fname + ": " + str(e))
 
-
-# ──────────────────────────────────────────────────────────────
-#  Plugin lifecycle
-# ──────────────────────────────────────────────────────────────
 
 def plugin_loaded():
     global _poll_active

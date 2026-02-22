@@ -1,6 +1,6 @@
 # ComparePlugin for Sublime Text
 
-A better plugin for Sublime Text 4.
+A better plugin for for comparing files in Sublime Text 4.
 
 ---
 
@@ -24,7 +24,7 @@ A better plugin for Sublime Text 4.
 
 1. Open Sublime Text.
 2. Go to **Preferences → Browse Packages…**
-3. Create a new folder called `ComparePlugin`.
+3. Create a new folder called `BetterCompare`.
 4. Copy **all files** from this folder into it:
 
 ```
@@ -38,7 +38,6 @@ Packages/
     README.md
 ```
 
-5. Sublime Text auto-loads the plugin. Check the console (**View → Show Console**) for `ComparePlugin loaded.`
 
 ### Colour scheme
 
