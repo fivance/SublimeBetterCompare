@@ -1,0 +1,17 @@
+[
+    // Compare the two most-recently-active views
+    { "keys": ["alt+d"], "command": "compare_files" },
+
+    // Pick which two views to compare
+    { "keys": ["alt+shift+d"], "command": "compare_select_files" },
+
+    // Compare current file against the saved (disk) version
+    { "keys": ["alt+shift+s"], "command": "compare_against_saved" },
+
+    // Navigate differences
+    { "keys": ["alt+down"], "command": "compare_next_diff" },
+    { "keys": ["alt+up"],   "command": "compare_prev_diff" },
+
+    // Clear highlights and restore single-pane layout
+    { "keys": ["alt+shift+c"], "command": "compare_clear" }
+]

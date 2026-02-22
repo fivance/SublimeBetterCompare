@@ -1,0 +1,42 @@
+[
+    {
+        "caption": "Tools",
+        "id": "tools",
+        "children":
+        [
+            {
+                "caption": "Better Compare",
+                "id": "better_compare",
+                "children":
+                [
+                    {
+                        "caption": "Compare (Last Two Views)",
+                        "command": "compare_files"
+                    },
+                    {
+                        "caption": "Select Files to Compare...",
+                        "command": "compare_select_files"
+                    },
+                    {
+                        "caption": "Compare Against Saved",
+                        "command": "compare_against_saved"
+                    },
+                    { "caption": "-" },
+                    {
+                        "caption": "Next Difference",
+                        "command": "compare_next_diff"
+                    },
+                    {
+                        "caption": "Previous Difference",
+                        "command": "compare_prev_diff"
+                    },
+                    { "caption": "-" },
+                    {
+                        "caption": "Clear Comparison",
+                        "command": "compare_clear"
+                    }
+                ]
+            }
+        ]
+    }
+]

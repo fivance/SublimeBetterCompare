@@ -1,0 +1,40 @@
+{
+    // ComparePlugin colour overrides.
+    // Merge this into your existing .sublime-color-scheme, or save it as
+    //   Packages/ComparePlugin/compare_plugin.sublime-color-scheme
+    // and set "color_scheme": "Packages/ComparePlugin/compare_plugin.sublime-color-scheme"
+    // in your user preferences (not recommended – overrides your theme).
+    //
+    // Preferred approach: add the "rules" array entries to your existing theme.
+
+    "name": "Compare Plugin Colours",
+    "variables": {},
+    "globals": {},
+    "rules":
+    [
+        {
+            "name": "Compare – Added line",
+            "scope": "compare.added",
+            "background": "#1a4a1a",
+            "foreground": "#ccffcc"
+        },
+        {
+            "name": "Compare – Deleted line",
+            "scope": "compare.deleted",
+            "background": "#4a1a1a",
+            "foreground": "#ffcccc"
+        },
+        {
+            "name": "Compare – Changed line",
+            "scope": "compare.changed",
+            "background": "#3a3a1a",
+            "foreground": "#ffffcc"
+        },
+        {
+            "name": "Compare – Blank / padding line",
+            "scope": "compare.blank",
+            "background": "#2a2a2a",
+            "foreground": "#555555"
+        }
+    ]
+}
