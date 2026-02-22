@@ -1,6 +1,6 @@
 # ComparePlugin for Sublime Text
 
-A better plugin for for comparing files in Sublime Text 4.
+A better plugin for comparing files in Sublime Text 4.
 
 ---
 
