@@ -14,7 +14,6 @@ Installation:
   Restart Sublime Text to load plugin
 
 Usage:
-  Tools > Compare (pick 2 files to compare against each other)
   Tools > Compare Plugin > Compare (Last Two Views)   or  Alt+D
   Tools > Compare Plugin > Select Files to Compare    or  Alt+Shift+D
   Tools > Compare Plugin > Compare Against Saved      or  Alt+Shift+S
@@ -29,27 +28,23 @@ import difflib
 # ──────────────────────────────────────────────────────────────
 #  Constants
 # ──────────────────────────────────────────────────────────────
-# Region key names
 KEY_ADDED   = "compare_added"
-
-# Fill pattern for blank padding lines (mimics Visual Studio style)
 BLANK_FILL  = "/" * 120
 KEY_DELETED = "compare_deleted"
 KEY_CHANGED = "compare_changed"
 KEY_BLANK   = "compare_blank"
-KEY_INLINE  = "compare_inline"  # character-level highlights inside changed lines
+KEY_INLINE  = "compare_inline"
 
-# Colours for diff regions
 COLOR_ADDED   = "#1a3a1a"
 COLOR_DELETED = "#3a1a1a"
 COLOR_CHANGED = "#2e2a10"
 COLOR_BLANK   = "#2A2D2F"
-COLOR_INLINE  = "#FFEE00"   # bright yellow for intra-line char diffs
+COLOR_INLINE  = "#FFEE00"
 
 COLOR_ADDED_FG   = "#aaffaa"
 COLOR_DELETED_FG = "#ffaaaa"
 COLOR_CHANGED_FG = "#ffeeaa"
-COLOR_BLANK_FG = "#4A4D4F"
+COLOR_BLANK_FG   = "#4A4D4F"
 
 # window_id -> CompareSession
 _sessions = {}
@@ -77,9 +72,6 @@ def _apply_highlights(view, added_lines, deleted_lines, changed_lines, blank_lin
     total = len(line_regs)
     def safe(indices):
         return [line_regs[i] for i in indices if i < total]
-    # Use scope strings that embed the colour directly via add_regions' scope parameter.
-    # In ST3/4, when a scope is not found in the colour scheme, add_regions falls back
-    # to no colouring -- so we set a per-view colour scheme override on each display view.
     flags = sublime.DRAW_NO_OUTLINE
     view.add_regions(KEY_ADDED,   safe(added_lines),   "compare.added",   "dot",      flags)
     view.add_regions(KEY_DELETED, safe(deleted_lines), "compare.deleted", "dot",      flags)
@@ -88,10 +80,6 @@ def _apply_highlights(view, added_lines, deleted_lines, changed_lines, blank_lin
 
 
 def _apply_inline_highlights(left_view, right_view, changed_pairs):
-    """
-    For each pair of changed lines, do a character-level diff and highlight
-    the specific characters that differ in both views.
-    """
     left_regs  = _line_regions(left_view)
     right_regs = _line_regions(right_view)
     left_total  = len(left_regs)
@@ -103,25 +91,17 @@ def _apply_inline_highlights(left_view, right_view, changed_pairs):
     for (li, ri, ltext, rtext) in changed_pairs:
         if li >= left_total or ri >= right_total:
             continue
-        # Get the start offset of each line in the view
         l_line_start = left_regs[li].begin()
         r_line_start = right_regs[ri].begin()
 
-        # Character-level diff using SequenceMatcher
         matcher = difflib.SequenceMatcher(None, ltext, rtext, autojunk=False)
         for tag, i1, i2, j1, j2 in matcher.get_opcodes():
             if tag == "equal":
                 continue
-            # Highlight changed/deleted chars on the left
             if i1 < i2:
-                left_inline.append(
-                    sublime.Region(l_line_start + i1, l_line_start + i2)
-                )
-            # Highlight changed/inserted chars on the right
+                left_inline.append(sublime.Region(l_line_start + i1, l_line_start + i2))
             if j1 < j2:
-                right_inline.append(
-                    sublime.Region(r_line_start + j1, r_line_start + j2)
-                )
+                right_inline.append(sublime.Region(r_line_start + j1, r_line_start + j2))
 
     flags = sublime.DRAW_NO_OUTLINE
     left_view.add_regions(KEY_INLINE,  left_inline,  "compare.inline", "", flags)
@@ -129,18 +109,10 @@ def _apply_inline_highlights(left_view, right_view, changed_pairs):
 
 
 def _apply_view_color_scheme(view):
-    """
-    Write a standalone .tmTheme with a neutral dark background and our
-    4 diff scopes. No theme inheritance — avoids any colour bleed from
-    the user's active theme.
-    """
     import os
-
     fname    = "ComparePlugin.tmTheme"
     fpath    = os.path.join(sublime.packages_path(), "User", fname)
     pkg_path = "Packages/User/" + fname
-
-    # Neutral dark background/foreground — matches most dark themes well
     BG = "#1D1F21"
     FG = "#D4D4D4"
 
@@ -149,32 +121,32 @@ def _apply_view_color_scheme(view):
         '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">',
         '<plist version="1.0">',
         '<dict>',
-        '	<key>name</key><string>ComparePlugin</string>',
-        '	<key>settings</key>',
-        '	<array>',
-        '		<dict>',
-        '			<key>settings</key>',
-        '			<dict>',
-        '				<key>background</key><string>' + BG + '</string>',
-        '				<key>foreground</key><string>' + FG + '</string>',
-        '				<key>caret</key><string>#AEAFAD</string>',
-        '				<key>lineHighlight</key><string>#2A2A2A</string>',
-        '				<key>selection</key><string>#264F78</string>',
-        '			</dict>',
-        '		</dict>',
+        '   <key>name</key><string>ComparePlugin</string>',
+        '   <key>settings</key>',
+        '   <array>',
+        '       <dict>',
+        '           <key>settings</key>',
+        '           <dict>',
+        '               <key>background</key><string>' + BG + '</string>',
+        '               <key>foreground</key><string>' + FG + '</string>',
+        '               <key>caret</key><string>#AEAFAD</string>',
+        '               <key>lineHighlight</key><string>#2A2A2A</string>',
+        '               <key>selection</key><string>#264F78</string>',
+        '           </dict>',
+        '       </dict>',
     ]
 
     def scope_entry(name, scope, bg, fg):
         return [
-            '		<dict>',
-            '			<key>name</key><string>' + name + '</string>',
-            '			<key>scope</key><string>' + scope + '</string>',
-            '			<key>settings</key>',
-            '			<dict>',
-            '				<key>background</key><string>' + bg + '</string>',
-            '				<key>foreground</key><string>' + fg + '</string>',
-            '			</dict>',
-            '		</dict>',
+            '       <dict>',
+            '           <key>name</key><string>' + name + '</string>',
+            '           <key>scope</key><string>' + scope + '</string>',
+            '           <key>settings</key>',
+            '           <dict>',
+            '               <key>background</key><string>' + bg + '</string>',
+            '               <key>foreground</key><string>' + fg + '</string>',
+            '           </dict>',
+            '       </dict>',
         ]
 
     lines += scope_entry("Compare Added",   "compare.added",   COLOR_ADDED,   COLOR_ADDED_FG)
@@ -182,12 +154,7 @@ def _apply_view_color_scheme(view):
     lines += scope_entry("Compare Changed", "compare.changed", COLOR_CHANGED, COLOR_CHANGED_FG)
     lines += scope_entry("Compare Blank",   "compare.blank",   COLOR_BLANK,   COLOR_BLANK_FG)
     lines += scope_entry("Compare Inline",  "compare.inline",  COLOR_INLINE,  "#000000")
-
-    lines += [
-        '	</array>',
-        '</dict>',
-        '</plist>',
-    ]
+    lines += [' </array>', '</dict>', '</plist>']
 
     try:
         with open(fpath, "w", encoding="utf-8") as fh:
@@ -195,6 +162,7 @@ def _apply_view_color_scheme(view):
         view.settings().set("color_scheme", pkg_path)
     except Exception as e:
         print("ComparePlugin: could not write tmTheme: " + str(e))
+
 
 def _set_view_content(view, content):
     view.run_command("compare_set_content", {"content": content})
@@ -213,12 +181,12 @@ def _scroll_to_line(view, line_idx):
 
 class DiffResult(object):
     def __init__(self):
-        self.left_lines   = []
-        self.right_lines  = []
-        self.left_marks   = {"added": [], "deleted": [], "changed": [], "blank": []}
-        self.right_marks  = {"added": [], "deleted": [], "changed": [], "blank": []}
-        self.diff_blocks  = []
-        self.changed_pairs = []  # list of (left_line_idx, right_line_idx, left_text, right_text)
+        self.left_lines    = []
+        self.right_lines   = []
+        self.left_marks    = {"added": [], "deleted": [], "changed": [], "blank": []}
+        self.right_marks   = {"added": [], "deleted": [], "changed": [], "blank": []}
+        self.diff_blocks   = []
+        self.changed_pairs = []
 
 
 def compute_diff(left_lines, right_lines):
@@ -234,26 +202,21 @@ def compute_diff(left_lines, right_lines):
             for k in range(i2 - i1):
                 l_out.append(left_lines[i1 + k])
                 r_out.append(right_lines[j1 + k])
-                li += 1
-                ri += 1
+                li += 1; ri += 1
         elif tag == "insert":
             result.diff_blocks.append((li, ri))
             for k in range(j2 - j1):
                 l_out.append(BLANK_FILL)
                 r_out.append(right_lines[j1 + k])
-                l_blank.append(li)
-                r_added.append(ri)
-                li += 1
-                ri += 1
+                l_blank.append(li); r_added.append(ri)
+                li += 1; ri += 1
         elif tag == "delete":
             result.diff_blocks.append((li, ri))
             for k in range(i2 - i1):
                 l_out.append(left_lines[i1 + k])
                 r_out.append(BLANK_FILL)
-                l_deleted.append(li)
-                r_blank.append(ri)
-                li += 1
-                ri += 1
+                l_deleted.append(li); r_blank.append(ri)
+                li += 1; ri += 1
         elif tag == "replace":
             result.diff_blocks.append((li, ri))
             lcount = i2 - i1
@@ -261,17 +224,15 @@ def compute_diff(left_lines, right_lines):
             for k in range(max(lcount, rcount)):
                 lline = left_lines[i1 + k]  if k < lcount else BLANK_FILL
                 rline = right_lines[j1 + k] if k < rcount else BLANK_FILL
-                l_out.append(lline)
-                r_out.append(rline)
+                l_out.append(lline); r_out.append(rline)
                 if k < lcount and k < rcount:
                     l_changed.append(li); r_changed.append(ri)
                     result.changed_pairs.append((li, ri, lline, rline))
                 elif k < lcount:
                     l_deleted.append(li); r_blank.append(ri)
                 else:
-                    l_blank.append(li);  r_added.append(ri)
-                li += 1
-                ri += 1
+                    l_blank.append(li); r_added.append(ri)
+                li += 1; ri += 1
 
     result.left_lines  = l_out
     result.right_lines = r_out
@@ -284,15 +245,14 @@ def compute_diff(left_lines, right_lines):
 
 # ──────────────────────────────────────────────────────────────
 #  Session
-#  Tracks the two SCRATCH display views (not the original files)
 # ──────────────────────────────────────────────────────────────
 
 class CompareSession(object):
     def __init__(self, source_window, compare_window, left_display, right_display, diff):
-        self.source_window = source_window   # original window (source files live here)
-        self.window        = compare_window  # dedicated compare window
-        self.left_display  = left_display    # scratch view showing left diff
-        self.right_display = right_display   # scratch view showing right diff
+        self.source_window = source_window
+        self.window        = compare_window
+        self.left_display  = left_display
+        self.right_display = right_display
         self.diff          = diff
         self.block_index   = 0
 
@@ -318,18 +278,47 @@ class CompareSession(object):
 
 
 # ──────────────────────────────────────────────────────────────
-#  Core runner
-#  Creates two SCRATCH views for the diff. Original views
-#  are read-only sources and are never modified.
+#  Core runner — defers all work until new_window is ready
 # ──────────────────────────────────────────────────────────────
 
 def run_compare(source_window, left_source, right_source):
-    # Close any existing session from this source window first
     _close_session_by_source(source_window.id())
 
-    diff = compute_diff(_get_lines(left_source), _get_lines(right_source))
+    diff     = compute_diff(_get_lines(left_source), _get_lines(right_source))
+    left_id  = left_source.id()
+    right_id = right_source.id()
+    before_ids = set(w.id() for w in sublime.windows())
 
-    # Build display names
+    sublime.run_command("new_window")
+
+    def on_window_ready():
+        compare_window = None
+        for w in sublime.windows():
+            if w.id() not in before_ids:
+                compare_window = w
+                break
+        if compare_window is None:
+            print("ComparePlugin: new_window not found, aborting")
+            return
+
+        left_source_view  = None
+        right_source_view = None
+        for v in source_window.views():
+            if v.id() == left_id:
+                left_source_view = v
+            if v.id() == right_id:
+                right_source_view = v
+
+        if not left_source_view or not right_source_view:
+            print("ComparePlugin: source views lost after new_window")
+            return
+
+        _finish_compare(source_window, compare_window, left_source_view, right_source_view, diff)
+
+    sublime.set_timeout(on_window_ready, 100)
+
+
+def _finish_compare(source_window, compare_window, left_source, right_source, diff):
     def display_name(view):
         fname = view.file_name()
         if fname:
@@ -338,19 +327,6 @@ def run_compare(source_window, left_source, right_source):
             name = view.name() or "untitled"
         return "[Compare] " + name
 
-    # Open a brand new window dedicated to this comparison
-    before_ids = set(w.id() for w in sublime.windows())
-    sublime.run_command("new_window")
-    compare_window = None
-    for w in sublime.windows():
-        if w.id() not in before_ids:
-            compare_window = w
-            break
-    if compare_window is None:
-        # fallback — should never happen
-        compare_window = sublime.active_window()
-
-    # Create two scratch views inside the new window
     left_display  = compare_window.new_file()
     right_display = compare_window.new_file()
 
@@ -361,7 +337,6 @@ def run_compare(source_window, left_source, right_source):
     left_display.set_name(display_name(left_source))
     right_display.set_name(display_name(right_source))
 
-    # Copy syntax so code highlighting looks right
     left_syntax  = left_source.settings().get("syntax")
     right_syntax = right_source.settings().get("syntax")
     if left_syntax:
@@ -369,28 +344,26 @@ def run_compare(source_window, left_source, right_source):
     if right_syntax:
         right_display.set_syntax_file(right_syntax)
 
-    # Enable minimap on both display views
     for dv in (left_display, right_display):
         dv.settings().set("minimap", True)
         dv.settings().set("word_wrap", False)
 
-    # Side-by-side layout in the compare window
     compare_window.set_layout({
         "cols":  [0.0, 0.5, 1.0],
         "rows":  [0.0, 1.0],
         "cells": [[0, 0, 1, 1], [1, 0, 2, 1]]
     })
 
-    # new_window starts with one empty untitled view — close it
+    # Close only the blank untitled view new_window creates — never file-backed views
     for v in compare_window.views():
         if v.id() not in (left_display.id(), right_display.id()):
-            v.set_scratch(True)
-            v.close()
+            if v.file_name() is None and not v.is_dirty():
+                v.set_scratch(True)
+                v.close()
 
     compare_window.set_view_index(left_display,  0, 0)
     compare_window.set_view_index(right_display, 1, 0)
 
-    # Write padded diff content
     left_display.set_read_only(False)
     right_display.set_read_only(False)
     _set_view_content(left_display,  "\n".join(diff.left_lines))
@@ -398,7 +371,6 @@ def run_compare(source_window, left_source, right_source):
     left_display.set_read_only(True)
     right_display.set_read_only(True)
 
-    # Apply diff highlights and per-view colour scheme
     _apply_highlights(left_display,
                       diff.left_marks["added"],   diff.left_marks["deleted"],
                       diff.left_marks["changed"], diff.left_marks["blank"])
@@ -410,7 +382,6 @@ def run_compare(source_window, left_source, right_source):
     _apply_view_color_scheme(right_display)
 
     session = CompareSession(source_window, compare_window, left_display, right_display, diff)
-    # Key by BOTH the source window and the compare window so we can look up either way
     _sessions[source_window.id()]  = session
     _sessions[compare_window.id()] = session
 
@@ -429,19 +400,13 @@ def run_compare(source_window, left_source, right_source):
 
 
 def _close_session(window_id, close_views=True):
-    """Tear down a session by either the source or compare window id."""
     session = _sessions.pop(window_id, None)
     if not session:
         return
-    # Remove the other key too so nothing recurses
     _sessions.pop(session.source_window.id(), None)
     _sessions.pop(session.window.id(), None)
 
     if close_views:
-        # Close each scratch view individually.
-        # When the last view in the compare window closes,
-        # Sublime closes that window automatically — without
-        # touching any other window.
         for v in (session.left_display, session.right_display):
             try:
                 v.set_read_only(False)
@@ -452,12 +417,11 @@ def _close_session(window_id, close_views=True):
 
 
 def _close_session_by_source(source_window_id):
-    """Close whatever compare session belongs to a given source window."""
     _close_session(source_window_id, close_views=True)
 
 
 # ──────────────────────────────────────────────────────────────
-#  Internal text command: write content into a view
+#  Internal text command
 # ──────────────────────────────────────────────────────────────
 
 class CompareSetContentCommand(sublime_plugin.TextCommand):
@@ -490,8 +454,6 @@ class CompareFilesCommand(sublime_plugin.WindowCommand):
 class CompareSelectFilesCommand(sublime_plugin.WindowCommand):
     """Pick any two open views to compare.  Command: compare_select_files"""
     def run(self):
-        # Rename command palette entry text to "Compare" when triggered
-        # Build the file list excluding any active compare display views
         active_ids = set()
         session = _sessions.get(self.window.id())
         if session:
@@ -504,7 +466,6 @@ class CompareSelectFilesCommand(sublime_plugin.WindowCommand):
         ]
         self._selected = []
 
-        # Step 1: ask for first file
         self.window.show_quick_panel(
             self._names,
             self._on_first,
@@ -516,7 +477,6 @@ class CompareSelectFilesCommand(sublime_plugin.WindowCommand):
             return
         self._selected.append(idx)
 
-        # Refresh the file list (user may have switched tabs between picks)
         active_ids = set()
         session = _sessions.get(self.window.id())
         if session:
@@ -527,14 +487,12 @@ class CompareSelectFilesCommand(sublime_plugin.WindowCommand):
             for v in self._views
         ]
 
-        # Find the view that was picked in step 1 by name match
         first_name = (
             self._views[self._selected[0]].file_name() or
             self._views[self._selected[0]].name() or
             "<untitled " + str(self._views[self._selected[0]].id()) + ">"
         ) if self._selected[0] < len(self._views) else ""
 
-        # Step 2: ask for second file
         self.window.show_quick_panel(
             self._names,
             self._on_second,
@@ -544,7 +502,6 @@ class CompareSelectFilesCommand(sublime_plugin.WindowCommand):
     def _on_second(self, idx):
         if idx == -1:
             return
-        # Re-resolve the first view by index from the refreshed list
         first_idx = self._selected[0]
         if first_idx >= len(self._views) or idx >= len(self._views):
             sublime.error_message("Compare: could not resolve selected files.")
@@ -572,13 +529,11 @@ class CompareAgainstSavedCommand(sublime_plugin.WindowCommand):
         except OSError as e:
             sublime.error_message("Compare: cannot read saved file.\n" + str(e))
             return
-        # Create a temporary source view for the saved version
         saved_view = self.window.new_file()
         saved_view.set_scratch(True)
         saved_view.set_name("[Saved] " + fname.replace("\\", "/").split("/")[-1])
         _set_view_content(saved_view, saved)
         run_compare(self.window, saved_view, view)
-        # Close the temporary source view now that diff is computed
         saved_view.close()
 
     def is_enabled(self):
@@ -631,104 +586,6 @@ class ComparePrevDiffCommand(sublime_plugin.WindowCommand):
         return True
 
 
-
-# ──────────────────────────────────────────────────────────────
-#  Mark & Compare (tab right-click workflow)
-#
-#  Right-click any open tab -> "Mark for Compare"
-#  Right-click another tab  -> "Compare with Marked"
-#  The marked view is stored per-window.
-# ──────────────────────────────────────────────────────────────
-
-_marked = {}        # window_id -> view
-_marked_names = {}  # view_id -> original tab name
-
-
-def _unmark_tab(view):
-    original = _marked_names.pop(view.id(), None)
-    try:
-        view.set_name(original if original is not None else "")
-    except Exception:
-        pass
-
-
-def _get_marked(window):
-    v = _marked.get(window.id())
-    if v is None:
-        return None
-    # Check the view is still open in this window
-    open_ids = set(x.id() for x in window.views())
-    if v.id() not in open_ids:
-        _marked_names.pop(v.id(), None)
-        _marked.pop(window.id(), None)
-        return None
-    return v
-
-
-class CompareMarkCommand(sublime_plugin.TextCommand):
-    """Right-click a tab -> Mark for Compare.  Command: compare_mark"""
-    def run(self, edit):
-        window = self.view.window()
-        if not window:
-            return
-        # Unmark previous tab in this window if different
-        prev = _marked.get(window.id())
-        if prev and prev.id() != self.view.id():
-            _unmark_tab(prev)
-        _marked[window.id()] = self.view
-        fname = self.view.file_name()
-        name  = fname.replace("\\", "/").split("/")[-1] if fname else (self.view.name() or "untitled")
-        # Prefix tab name with >> marker
-        if not self.view.name().startswith(">> "):
-            _marked_names[self.view.id()] = self.view.name()
-            self.view.set_name(">> " + name)
-        sublime.status_message("Compare: marked \"" + name + "\" — right-click another tab and choose \"Compare with Marked\"")
-
-    def is_enabled(self):
-        return True
-
-    def is_visible(self):
-        return True
-
-
-class CompareWithMarkedCommand(sublime_plugin.TextCommand):
-    """Right-click a tab -> Compare with Marked.  Command: compare_with_marked"""
-    def run(self, edit):
-        window = self.view.window()
-        if not window:
-            return
-        marked = _get_marked(window)
-        if marked is None:
-            sublime.error_message("Compare: no file marked yet.\nRight-click a tab and choose \"Mark for Compare\" first.")
-            return
-        if marked.id() == self.view.id():
-            sublime.error_message("Compare: cannot compare a file with itself.")
-            return
-        run_compare(window, marked, self.view)
-        _unmark_tab(marked)
-        _marked.pop(window.id(), None)
-
-    def is_enabled(self):
-        window = self.view.window()
-        if not window:
-            return False
-        return _get_marked(window) is not None
-
-    def is_visible(self):
-        return True
-
-    def description(self):
-        window = self.view.window() if self.view else None
-        if not window:
-            return "Compare with Marked"
-        marked = _get_marked(window)
-        if not marked:
-            return "Compare with Marked"
-        fname = marked.file_name()
-        name  = fname.replace("\\", "/").split("/")[-1] if fname else (marked.name() or "untitled")
-        return "Compare with Marked: \"" + name + "\""
-
-
 class CompareClearCommand(sublime_plugin.WindowCommand):
     """Close compare window.  Command: compare_clear"""
     def run(self):
@@ -742,22 +599,17 @@ class CompareClearCommand(sublime_plugin.WindowCommand):
 
 # ──────────────────────────────────────────────────────────────
 #  Close listener
-#  When the user closes one of the scratch diff views directly,
-#  clean up the session and close the other one too.
 # ──────────────────────────────────────────────────────────────
 
 class CompareCloseListener(sublime_plugin.EventListener):
 
     def on_pre_close_window(self, window):
-        """When the compare window is closed by the user, clean up the session."""
         session = _sessions.get(window.id())
         if session and window.id() == session.window.id():
-            # Remove both keys so nothing tries to re-close
             _sessions.pop(session.source_window.id(), None)
             _sessions.pop(session.window.id(), None)
 
     def on_pre_close(self, view):
-        # Fallback: if a display view is closed individually, close whole session
         seen = set()
         for wid, session in list(_sessions.items()):
             if session.window.id() in seen:
@@ -766,8 +618,6 @@ class CompareCloseListener(sublime_plugin.EventListener):
                 seen.add(session.window.id())
                 _sessions.pop(session.source_window.id(), None)
                 _sessions.pop(session.window.id(), None)
-                # Close the peer view; Sublime auto-closes the window
-                # when its last view is gone
                 if view.id() == session.left_display.id():
                     peer = session.right_display
                 else:
@@ -782,7 +632,7 @@ class CompareCloseListener(sublime_plugin.EventListener):
 
 
 def _restore_layout(window):
-    pass   # layout lives in the compare window which closes itself
+    pass
 
 
 # ──────────────────────────────────────────────────────────────
@@ -866,8 +716,8 @@ def _fast_poll_tick():
         except Exception:
             continue
 
-        l_prev = _last_vp.get(lv.id())
-        r_prev = _last_vp.get(rv.id())
+        l_prev  = _last_vp.get(lv.id())
+        r_prev  = _last_vp.get(rv.id())
         l_moved = l_prev is not None and (lp[0] != l_prev[0] or lp[1] != l_prev[1])
         r_moved = r_prev is not None and (rp[0] != r_prev[0] or rp[1] != r_prev[1])
 
@@ -898,11 +748,6 @@ def _start_sync_poll():
 
 # ──────────────────────────────────────────────────────────────
 #  Colour scheme injection
-#
-#  Sublime Text supports a per-user colour scheme override file
-#  (Packages/User/<name>.sublime-color-scheme) that MERGES its
-#  rules on top of any active theme without replacing it.
-#  We write ours on plugin_loaded and remove it on plugin_unloaded.
 # ──────────────────────────────────────────────────────────────
 
 import os
@@ -911,19 +756,11 @@ import json
 _SCHEME_FILENAME = "ComparePlugin.sublime-color-scheme"
 
 
-
-
 def _scheme_path():
-    """Return the full path to the User packages override file."""
-    packages_path = sublime.packages_path()
-    return os.path.join(packages_path, "User", _SCHEME_FILENAME)
+    return os.path.join(sublime.packages_path(), "User", _SCHEME_FILENAME)
 
 
 def _install_color_scheme():
-    """
-    Write a merged .sublime-color-scheme into Packages/User/.
-    ST3.1+ merges this on top of the active theme automatically.
-    """
     path = _scheme_path()
     data = {
         "name": "ComparePlugin colours",
@@ -949,7 +786,6 @@ def _install_color_scheme():
 
 
 def _remove_color_scheme():
-    """Remove all generated colour scheme files when the plugin is unloaded."""
     for fname in ("ComparePlugin.sublime-color-scheme", "ComparePlugin.tmTheme"):
         path = os.path.join(sublime.packages_path(), "User", fname)
         try:
@@ -965,22 +801,18 @@ def plugin_loaded():
     _sessions.clear()
     _last_vp.clear()
     _syncing.clear()
-    _marked.clear()
-    _marked_names.clear()
     _poll_active = False
     _install_color_scheme()
     import sys
     print("ComparePlugin loaded OK (Python " + sys.version + ")")
 
+
 def plugin_unloaded():
     global _poll_active
     _poll_active = False
-    # Close all scratch display views cleanly
     for wid in list(_sessions.keys()):
         _close_session(wid, close_views=True)
     _sessions.clear()
     _last_vp.clear()
     _syncing.clear()
-    _marked.clear()
-    _marked_names.clear()
     _remove_color_scheme()
